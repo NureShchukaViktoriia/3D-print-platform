@@ -1,0 +1,162 @@
+{% extends 'main/base.html' %}
+
+{% block title %}
+Оформлення замовлення
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+    <h1 class="mb-4">
+        Оформлення замовлення
+    </h1>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h4>{{ model.name }}</h4>
+
+            <p>
+                {{ model.description|truncatechars:150 }}
+            </p>
+
+            <p>
+                <strong>Базова ціна:</strong>
+                {{ model.base_price }} грн
+            </p>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label">Ім'я</label>
+            {{ form.customer_name }}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Телефон</label>
+            {{ form.customer_phone }}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Матеріал</label>
+            {{ form.material }}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Колір</label>
+            {{ form.color }}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Розмір моделі, см</label>
+            {{ form.size }}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Висота шару</label>
+            {{ form.layer_height }}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Товщина стінок</label>
+            {{ form.wall_thickness }}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Заповнення</label>
+            {{ form.infill }}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Кількість</label>
+            {{ form.quantity }}
+        </div>
+
+        <div class="alert alert-info">
+            Орієнтовна вартість:
+            <strong><span id="price">{{ model.base_price }}</span> грн</strong>
+        </div>
+
+        <button type="submit" class="btn btn-success">
+            Підтвердити замовлення
+        </button>
+
+        <a href="{% url 'model_detail' model.id %}" class="btn btn-secondary">
+            Назад
+        </a>
+    </form>
+
+</div>
+
+<script>
+    const basePrice = Number("{{ model.base_price }}");
+
+    const materialField = document.getElementById("id_material");
+    const sizeField = document.getElementById("id_size");
+    const layerField = document.getElementById("id_layer_height");
+    const wallField = document.getElementById("id_wall_thickness");
+    const infillField = document.getElementById("id_infill");
+    const quantityField = document.getElementById("id_quantity");
+    const priceOutput = document.getElementById("price");
+
+    function calculatePrice() {
+        const materialCoef = {
+            "PLA": 1.0,
+            "PETG": 1.2,
+            "ABS": 1.35
+        };
+
+        const layerCoef = {
+            "100": 1.3,
+            "200": 1.0,
+            "300": 0.85
+        };
+
+        const wallCoef = {
+            "1": 1.0,
+            "2": 1.15,
+            "3": 1.3
+        };
+
+        const material = materialField.value;
+        const size = Number(sizeField.value || 10);
+        const layer = layerField.value;
+        const wall = wallField.value;
+        const infill = Number(infillField.value || 25);
+        const quantity = Number(quantityField.value || 1);
+
+        const sizeCoef = size / 10;
+        const infillCoef = 1 + infill / 100;
+
+        const total = basePrice
+            * (materialCoef[material] || 1)
+            * (layerCoef[layer] || 1)
+            * (wallCoef[wall] || 1)
+            * infillCoef
+            * sizeCoef
+            * quantity;
+
+        priceOutput.textContent = total.toFixed(2);
+    }
+
+    [
+        materialField,
+        sizeField,
+        layerField,
+        wallField,
+        infillField,
+        quantityField
+    ].forEach(field => {
+        if (field) {
+            field.addEventListener("input", calculatePrice);
+            field.addEventListener("change", calculatePrice);
+        }
+    });
+
+    calculatePrice();
+</script>
+
+{% endblock %}

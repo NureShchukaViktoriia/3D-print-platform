@@ -1,0 +1,97 @@
+{% extends 'main/base.html' %}
+
+{% block title %}
+{{ model.name }}
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+    <div class="row">
+
+        <!-- Images -->
+        <div class="col-md-6">
+
+            {% if model.images.all %}
+                <img src="{{ model.images.first.image.url }}"
+                     class="img-fluid rounded mb-3"
+                     alt="{{ model.name }}">
+            {% endif %}
+
+            <div class="row">
+
+                {% for image in model.images.all %}
+                    <div class="col-4 mb-3">
+
+                        <img src="{{ image.image.url }}"
+                             class="img-fluid rounded">
+
+                    </div>
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        <!-- Info -->
+        <div class="col-md-6">
+
+            <h1>{{ model.name }}</h1>
+
+            <p class="text-muted">
+                Категорія: {{ model.category.name }}
+            </p>
+
+            <p>
+                {{ model.description }}
+            </p>
+
+            <hr>
+
+            <h4>Рекомендовані параметри друку</h4>
+
+            <ul class="list-group mb-4">
+
+                <li class="list-group-item">
+                    <strong>Матеріал:</strong>
+                    {{ model.recommended_material }}
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Розмір:</strong>
+                    {{ model.recommended_size }}
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Висота шару:</strong>
+                    {{ model.recommended_layer_height }} мкм
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Товщина стінок:</strong>
+                    {{ model.recommended_wall_thickness }} мм
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Заповнення:</strong>
+                    {{ model.recommended_infill }}%
+                </li>
+
+            </ul>
+
+            <h3 class="mb-4">
+                {{ model.base_price }} грн
+            </h3>
+
+            <a href="{% url 'order_create' model.id %}" class="btn btn-success">
+                Замовити друк
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

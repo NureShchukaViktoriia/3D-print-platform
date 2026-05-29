@@ -1,0 +1,142 @@
+{% extends 'main/base.html' %}
+
+{% block title %}
+Каталог моделей
+{% endblock %}
+
+{% block content %}
+
+    <div class="container mt-5">
+        <h1 class="mb-4">Каталог 3D-моделей</h1>
+
+        <form method="get" class="row mb-4">
+
+        <div class="col-md-3 mb-2">
+            <input type="text"
+                name="q"
+                class="form-control"
+                placeholder="Пошук за назвою"
+                value="{{ request.GET.q }}">
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <select name="category" class="form-select">
+                <option value="">Усі категорії</option>
+
+                {% for category in categories %}
+                    <option value="{{ category.id }}"
+                        {% if request.GET.category == category.id|stringformat:"s" %}
+                            selected
+                        {% endif %}>
+                        {{ category.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <select name="material" class="form-select">
+                <option value="">Усі матеріали</option>
+
+                {% for material in materials %}
+                    <option value="{{ material.id }}"
+                        {% if request.GET.material == material.id|stringformat:"s" %}
+                            selected
+                        {% endif %}>
+                        {{ material.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <input type="number"
+                name="min_price"
+                class="form-control"
+                placeholder="Ціна від"
+                value="{{ request.GET.min_price }}">
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <input type="number"
+                name="max_price"
+                class="form-control"
+                placeholder="Ціна до"
+                value="{{ request.GET.max_price }}">
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <select name="sort" class="form-select">
+                <option value="">Без сортування</option>
+
+                <option value="price_asc"
+                    {% if request.GET.sort == 'price_asc' %}selected{% endif %}>
+                    Ціна ↑
+                </option>
+
+                <option value="price_desc"
+                    {% if request.GET.sort == 'price_desc' %}selected{% endif %}>
+                    Ціна ↓
+                </option>
+
+                <option value="name"
+                    {% if request.GET.sort == 'name' %}selected{% endif %}>
+                    За назвою
+                </option>
+
+                <option value="newest"
+                    {% if request.GET.sort == 'newest' %}selected{% endif %}>
+                    Нові спочатку
+                </option>
+            </select>
+        </div>
+
+        <div class="col-md-1 mb-2">
+            <button type="submit" class="btn btn-primary w-100">
+                🔍
+            </button>
+        </div>
+
+    </form>
+
+    <a href="{% url 'catalog' %}" class="btn btn-secondary mb-4">
+        Скинути фільтри
+    </a>
+
+
+
+
+    <div class="row">
+        {% for model in models %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+
+                    {% if model.images.all %}
+                        <img src="{{ model.images.first.image.url }}"
+                             class="card-img-top"
+                             alt="{{ model.name }}">
+                    {% endif %}
+
+                    <div class="card-body">
+                        <h5 class="card-title">{{ model.name }}</h5>
+                        <p class="card-text">{{ model.description|truncatechars:100 }}</p>
+
+                        <p>
+                            <strong>Ціна:</strong>
+                            {{ model.base_price }} грн
+                        </p>
+
+                        <a href="{% url 'model_detail' model.id %}" class="btn btn-primary">
+                            Детальніше
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        {% empty %}
+            <p>Поки що моделей немає.</p>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

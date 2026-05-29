@@ -1,0 +1,20 @@
+{% extends 'main/base.html' %}
+
+{% block title %}
+Замовлення оформлено
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <div class="alert alert-success">
+        <h4>Замовлення успішно оформлено!</h4>
+        <p>Менеджер зв’яжеться з вами для уточнення деталей.</p>
+    </div>
+
+    <a href="{% url 'catalog' %}" class="btn btn-primary">
+        Повернутися до каталогу
+    </a>
+</div>
+
+{% endblock %}

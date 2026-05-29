@@ -1,0 +1,63 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Особистий кабінет{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Особистий кабінет</h2>
+
+    <div class="card p-4 mt-4 mb-4">
+        <h5>Дані користувача</h5>
+        <p><strong>Логін:</strong> {{ user.username }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+    </div>
+
+    <h4>Мої замовлення</h4>
+
+    {% if orders %}
+        <div class="row mt-3">
+            {% for order in orders %}
+                <div class="col-md-6 mb-3">
+                    <div class="card p-3 shadow-sm">
+                        <h5>Замовлення №{{ order.id }}</h5>
+
+                        <p>
+                            <strong>Модель:</strong>
+                            {{ order.model.name }}
+                        </p>
+
+                        <p>
+                            <strong>Матеріал:</strong>
+                            {{ order.material }}
+                        </p>
+
+                        <p>
+                            <strong>Колір:</strong>
+                            {{ order.get_color_display }}
+                        </p>
+
+                        <p>
+                            <strong>Ціна:</strong>
+                            {{ order.total_price }} грн
+                        </p>
+
+                        <p>
+                            <strong>Дата:</strong>
+                            {{ order.created_at|date:"d.m.Y H:i" }}
+                        </p>
+
+                        <p>
+                            <strong>Статус:</strong>
+                            {{ order.get_status_display }}
+                        </p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-muted mt-3">
+            У вас ще немає замовлень.
+        </p>
+    {% endif %}
+</div>
+{% endblock %}
