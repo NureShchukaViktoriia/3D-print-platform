@@ -1,9 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect, render
 from .forms import RegisterForm
 from .utils import calculate_order_price
-from .models import Model3D, Order, Category, Material
+from .models import Model3D, Order, Category, Material, Favorite
 from .forms import OrderForm
 
 def register_view(request):
@@ -60,6 +61,13 @@ def catalog(request):
         models = models.order_by('name')
     elif sort == 'newest':
         models = models.order_by('-created_at')
+    
+    favorite_ids = []
+
+    if request.user.is_authenticated:
+        favorite_ids = Favorite.objects.filter(
+            user=request.user
+        ).values_list('model_id', flat=True)
 
     return render(
         request,
@@ -68,6 +76,7 @@ def catalog(request):
             'models': models,
             'categories': categories,
             'materials': materials,
+            'favorite_ids': favorite_ids
         }
     )
 
@@ -127,6 +136,35 @@ def profile_view(request):
         user=request.user
     ).order_by('-created_at')
 
+    favorites = Favorite.objects.filter(
+        user=request.user
+    ).select_related('model').order_by('-created_at')
+
     return render(request, 'main/profile.html', {
-        'orders': orders
+        'orders': orders,
+        'favorites': favorites
+    })
+
+@login_required
+def toggle_favorite(request, model_id):
+    model = get_object_or_404(Model3D, id=model_id)
+
+    favorite, created = Favorite.objects.get_or_create(
+        user=request.user,
+        model=model
+    )
+
+    if not created:
+        favorite.delete()
+
+    return redirect(request.META.get('HTTP_REFERER', 'catalog'))
+
+@login_required
+def favorites_view(request):
+    favorites = Favorite.objects.filter(
+        user=request.user
+    ).select_related('model').order_by('-created_at')
+
+    return render(request, 'main/favorites.html', {
+        'favorites': favorites
     })

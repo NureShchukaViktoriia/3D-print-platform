@@ -5,18 +5,16 @@
 {% endblock %}
 
 {% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Каталог 3D-моделей</h1>
 
-    <div class="container mt-5">
-        <h1 class="mb-4">Каталог 3D-моделей</h1>
-
-        <form method="get" class="row mb-4">
-
+    <form method="get" class="row mb-4">
         <div class="col-md-3 mb-2">
             <input type="text"
-                name="q"
-                class="form-control"
-                placeholder="Пошук за назвою"
-                value="{{ request.GET.q }}">
+                   name="q"
+                   class="form-control"
+                   placeholder="Пошук за назвою"
+                   value="{{ request.GET.q }}">
         </div>
 
         <div class="col-md-2 mb-2">
@@ -51,18 +49,18 @@
 
         <div class="col-md-2 mb-2">
             <input type="number"
-                name="min_price"
-                class="form-control"
-                placeholder="Ціна від"
-                value="{{ request.GET.min_price }}">
+                   name="min_price"
+                   class="form-control"
+                   placeholder="Ціна від"
+                   value="{{ request.GET.min_price }}">
         </div>
 
         <div class="col-md-2 mb-2">
             <input type="number"
-                name="max_price"
-                class="form-control"
-                placeholder="Ціна до"
-                value="{{ request.GET.max_price }}">
+                   name="max_price"
+                   class="form-control"
+                   placeholder="Ціна до"
+                   value="{{ request.GET.max_price }}">
         </div>
 
         <div class="col-md-2 mb-2">
@@ -96,39 +94,60 @@
                 🔍
             </button>
         </div>
-
     </form>
 
     <a href="{% url 'catalog' %}" class="btn btn-secondary mb-4">
         Скинути фільтри
     </a>
 
-
-
-
     <div class="row">
         {% for model in models %}
             <div class="col-md-4 mb-4">
-                <div class="card h-100">
+                <div class="card h-100 shadow-sm">
 
-                    {% if model.images.all %}
+                    {% if model.images.first %}
                         <img src="{{ model.images.first.image.url }}"
                              class="card-img-top"
                              alt="{{ model.name }}">
                     {% endif %}
 
-                    <div class="card-body">
+                    <div class="card-body d-flex flex-column">
                         <h5 class="card-title">{{ model.name }}</h5>
-                        <p class="card-text">{{ model.description|truncatechars:100 }}</p>
+
+                        <p class="card-text">
+                            {{ model.description|truncatechars:100 }}
+                        </p>
 
                         <p>
                             <strong>Ціна:</strong>
                             {{ model.base_price }} грн
                         </p>
 
-                        <a href="{% url 'model_detail' model.id %}" class="btn btn-primary">
-                            Детальніше
-                        </a>
+                        <div class="mt-auto d-flex align-items-center">
+                            <a href="{% url 'model_detail' model.id %}"
+                            class="btn btn-primary mr-2"
+                            style="margin-right: 15px;">
+                                Детальніше
+                            </a>
+
+                            {% if user.is_authenticated %}
+                                <form method="post"
+                                    action="{% url 'toggle_favorite' model.id %}"
+                                    class="d-inline">
+                                    {% csrf_token %}
+
+                                    {% if model.id in favorite_ids %}
+                                        <button type="submit" class="btn btn-danger">
+                                            &#9825;
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-outline-danger">
+                                            &#9829;
+                                        </button>
+                                    {% endif %}
+                                </form>
+                            {% endif %}
+                        </div>
                     </div>
 
                 </div>
@@ -138,5 +157,4 @@
         {% endfor %}
     </div>
 </div>
-
 {% endblock %}

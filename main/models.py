@@ -117,25 +117,6 @@ class ModelImage(models.Model):
 
     def __str__(self):
         return f"Зображення для {self.model.name}"
-
-
-class Favorite(models.Model):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name="Користувач"
-    )
-
-    model = models.ForeignKey(
-        Model3D,
-        on_delete=models.CASCADE,
-        verbose_name="Модель"
-    )
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.username} - {self.model.name}"
     
 
 class Order(models.Model):
@@ -230,3 +211,30 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Замовлення #{self.id}"
+    
+
+class Favorite(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="Користувач"
+    )
+
+    model = models.ForeignKey(
+        Model3D,
+        on_delete=models.CASCADE,
+        verbose_name="Модель"
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Дата додавання"
+    )
+
+    class Meta:
+        unique_together = ('user', 'model')
+        verbose_name = "Улюблена модель"
+        verbose_name_plural = "Улюблені моделі"
+
+    def __str__(self):
+        return f"{self.user.username} - {self.model.name}"
