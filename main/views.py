@@ -3,7 +3,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from .forms import RegisterForm
-from .utils import calculate_order_price
+from .utils import calculate_print_price
 from .models import Model3D, Order, Category, Material, Favorite
 from .forms import OrderForm
 from django.contrib import messages
@@ -106,7 +106,7 @@ def order_create(request, model_id):
                 order.user = request.user
 
             order.model = model
-            order.total_price = calculate_order_price(order, model)
+            order.total_price = calculate_print_price(order, model)
             order.save()
 
             return redirect('order_success', order_id=order.id)
@@ -189,3 +189,27 @@ def edit_profile(request):
 
 def info(request):
     return render(request, 'main/info.html')
+
+@property
+def recommended_price(self):
+
+    if not self.recommended_material:
+        return 0
+
+    if not self.recommended_quality:
+        return 0
+
+    result = calculate_print_price(
+        base_weight=self.base_weight,
+        complexity=self.complexity,
+        recommended_wall_thickness=self.recommended_wall_thickness,
+        size=self.recommended_size,
+        base_size=self.recommended_size,
+        infill=self.recommended_infill,
+        wall_thickness=self.recommended_wall_thickness,
+        material=self.recommended_material,
+        quality=self.recommended_quality,
+        quantity=1
+    )
+
+    return result["price"]

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from .utils import calculate_print_price
 
 
 class Category(models.Model):
@@ -13,25 +14,59 @@ class Category(models.Model):
 class Material(models.Model):
     name = models.CharField(max_length=100, verbose_name="Назва матеріалу")
     description = models.TextField(blank=True, null=True, verbose_name="Опис")
+
+    def __str__(self):
+        return self.name
+
+
+class PrintQuality(models.Model):
+    name = models.CharField(max_length=100, verbose_name="Назва якості")
+    layer_height = models.PositiveIntegerField(
+        choices=[
+            (100, '100 мкм'),
+            (200, '200 мкм'),
+            (300, '300 мкм'),
+        ],
+        verbose_name="Висота шару"
+    )
+
+    def __str__(self):
+        return f"{self.name} ({self.layer_height} мкм)"
+
+
+class MaterialPrice(models.Model):
+    material = models.ForeignKey(
+        Material,
+        on_delete=models.CASCADE,
+        related_name="prices",
+        verbose_name="Матеріал"
+    )
+
+    quality = models.ForeignKey(
+        PrintQuality,
+        on_delete=models.CASCADE,
+        related_name="material_prices",
+        verbose_name="Якість друку"
+    )
+
     price_per_gram = models.DecimalField(
         max_digits=8,
         decimal_places=2,
         verbose_name="Ціна за грам"
     )
 
+    class Meta:
+        unique_together = ("material", "quality")
+        verbose_name = "Ціна матеріалу"
+        verbose_name_plural = "Ціни матеріалів"
+
     def __str__(self):
-        return self.name
+        return f"{self.material} - {self.quality}: {self.price_per_gram} грн/г"
 
 
 class Model3D(models.Model):
-    name = models.CharField(
-        max_length=150,
-        verbose_name="Назва моделі"
-    )
-
-    description = models.TextField(
-        verbose_name="Опис"
-    )
+    name = models.CharField(max_length=150, verbose_name="Назва моделі")
+    description = models.TextField(verbose_name="Опис")
 
     category = models.ForeignKey(
         Category,
@@ -48,27 +83,29 @@ class Model3D(models.Model):
         verbose_name="Рекомендований матеріал"
     )
 
-    recommended_size = models.CharField(
-        max_length=100,
-        verbose_name="Рекомендований розмір"
+    recommended_size = models.PositiveIntegerField(
+        default=10,
+        verbose_name="Рекомендований розмір, см"
     )
 
-    recommended_layer_height = models.PositiveIntegerField(
-        choices=[
-            (100, '100 мкм'),
-            (200, '200 мкм'),
-            (300, '300 мкм'),
-        ],
-        verbose_name="Рекомендована висота шару"
+    base_size = models.PositiveIntegerField(
+        default=10,
+        verbose_name="Базовий розмір моделі, см"
     )
 
-    recommended_wall_thickness = models.PositiveIntegerField(
-        choices=[
-            (1, '1 мм'),
-            (2, '2 мм'),
-            (3, '3 мм'),
-        ],
-        verbose_name="Рекомендована товщина стінок"
+    recommended_quality = models.ForeignKey(
+        PrintQuality,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Рекомендована якість друку"
+    )
+
+    recommended_wall_thickness = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=1.2,
+        verbose_name="Рекомендована товщина стінок, мм"
     )
 
     recommended_infill = models.PositiveIntegerField(
@@ -83,18 +120,51 @@ class Model3D(models.Model):
         verbose_name="Рекомендоване заповнення"
     )
 
-    base_price = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        verbose_name="Базова ціна"
+    supports_required = models.BooleanField(
+        default=False,
+        verbose_name="Потребує підтримок"
     )
 
-    created_at = models.DateTimeField(
-        auto_now_add=True
+    base_weight = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=50,
+        verbose_name="Базова вага, г"
     )
+
+    complexity = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=1.00,
+        verbose_name="Коефіцієнт складності"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
+    
+    @property
+    def recommended_price(self):
+
+        if not self.recommended_material or not self.recommended_quality:
+            return 0
+
+        result = calculate_print_price(
+            base_weight=self.base_weight,
+            complexity=self.complexity,
+            supports_required=self.supports_required,
+            recommended_wall_thickness=self.recommended_wall_thickness,
+            size=self.recommended_size,
+            base_size=self.base_size,
+            infill=self.recommended_infill,
+            wall_thickness=self.recommended_wall_thickness,
+            material=self.recommended_material,
+            quality=self.recommended_quality,
+            quantity=1
+        )
+
+        return result["price"]
 
 
 class ModelImage(models.Model):
@@ -128,6 +198,15 @@ class Order(models.Model):
         ('completed', 'Завершено'),
     ]
 
+    COLOR_CHOICES = [
+        ('white', 'Білий'),
+        ('black', 'Чорний'),
+        ('gray', 'Сірий'),
+        ('red', 'Червоний'),
+        ('blue', 'Синій'),
+        ('green', 'Зелений'),
+    ]
+
     model = models.ForeignKey(
         Model3D,
         on_delete=models.CASCADE,
@@ -141,50 +220,32 @@ class Order(models.Model):
         blank=True
     )
 
-    customer_name = models.CharField(
-        max_length=100,
-        verbose_name="Ім'я"
-    )
+    customer_name = models.CharField(max_length=100, verbose_name="Ім'я")
+    customer_phone = models.CharField(max_length=20, verbose_name="Телефон")
 
-    customer_phone = models.CharField(
-        max_length=20,
-        verbose_name="Телефон"
-    )
-
-    material = models.CharField(
-        max_length=50,
+    material = models.ForeignKey(
+        Material,
+        on_delete=models.PROTECT,
         verbose_name="Матеріал"
     )
 
-    size = models.PositiveIntegerField(
-        verbose_name="Розмір"
+    quality = models.ForeignKey(
+        PrintQuality,
+        on_delete=models.PROTECT,
+        verbose_name="Якість друку"
     )
 
-    layer_height = models.PositiveIntegerField(
-        verbose_name="Висота шару"
+    size = models.PositiveIntegerField(verbose_name="Розмір, см")
+
+    wall_thickness = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        verbose_name="Товщина стінок, мм"
     )
 
-    wall_thickness = models.PositiveIntegerField(
-        verbose_name="Товщина стінок"
-    )
+    infill = models.PositiveIntegerField(verbose_name="Заповнення, %")
 
-    infill = models.PositiveIntegerField(
-        verbose_name="Заповнення"
-    )
-
-    quantity = models.PositiveIntegerField(
-        default=1,
-        verbose_name="Кількість"
-    )
-
-    COLOR_CHOICES = [
-        ('white', 'Білий'),
-        ('black', 'Чорний'),
-        ('gray', 'Сірий'),
-        ('red', 'Червоний'),
-        ('blue', 'Синій'),
-        ('green', 'Зелений'),
-    ]
+    quantity = models.PositiveIntegerField(default=1, verbose_name="Кількість")
 
     color = models.CharField(
         max_length=20,
@@ -193,21 +254,51 @@ class Order(models.Model):
         verbose_name="Колір"
     )
 
+    estimated_weight = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=0,
+        verbose_name="Орієнтовна вага, г"
+    )
+
     total_price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0
+        default=0,
+        verbose_name="Загальна ціна"
     )
 
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default='new'
+        default='new',
+        verbose_name="Статус"
     )
 
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def calculate_price(self):
+
+        result = calculate_print_price(
+            base_weight=self.model.base_weight,
+            complexity=self.model.complexity,
+            supports_required=self.model.supports_required,
+            recommended_wall_thickness=self.model.recommended_wall_thickness,
+            size=self.size,
+            base_size=self.model.base_size,
+            infill=self.infill,
+            wall_thickness=self.wall_thickness,
+            material=self.material,
+            quality=self.quality,
+            quantity=self.quantity
+        )
+
+        self.estimated_weight = result["weight"]
+        self.total_price = result["price"]
+
+    def save(self, *args, **kwargs):
+        self.calculate_price()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Замовлення #{self.id}"

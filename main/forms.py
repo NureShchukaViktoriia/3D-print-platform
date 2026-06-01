@@ -20,8 +20,8 @@ class OrderForm(forms.ModelForm):
             'customer_name',
             'customer_phone',
             'material',
+            'quality',
             'size',
-            'layer_height',
             'wall_thickness',
             'infill',
             'quantity',
@@ -50,7 +50,7 @@ class OrderForm(forms.ModelForm):
                 attrs={'class': 'form-control'}
             ),
 
-            'layer_height': forms.Select(
+            'quality': forms.Select(
                 attrs={'class': 'form-select'},
                 choices=[
                     (100, '100 мкм'),

@@ -60,12 +60,12 @@
 
                 <li class="list-group-item">
                     <strong>Розмір:</strong>
-                    {{ model.recommended_size }}
+                    {{ model.recommended_size }} см
                 </li>
 
                 <li class="list-group-item">
-                    <strong>Висота шару:</strong>
-                    {{ model.recommended_layer_height }} мкм
+                    <strong>Деталізація:</strong>
+                    {{ model.recommended_quality }}
                 </li>
 
                 <li class="list-group-item">
@@ -80,9 +80,13 @@
 
             </ul>
 
-            <h3 class="mb-4">
-                {{ model.base_price }} грн
+            <h3 class="mb-4 text-success">
+                від {{ model.recommended_price }} грн
             </h3>
+
+            <p class="text-muted">
+                Розраховано за рекомендованими параметрами друку
+            </p>
 
             <a href="{% url 'order_create' model.id %}" class="btn btn-success">
                 Замовити друк

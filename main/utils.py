@@ -1,36 +1,50 @@
-def calculate_order_price(order, model):
-    base_price = float(model.base_price)
 
-    material_coef = {
-        'PLA': 1.0,
-        'PETG': 1.2,
-        'ABS': 1.35,
-    }.get(order.material, 1.0)
-
-    layer_coef = {
-        100: 1.3,
-        200: 1.0,
-        300: 0.85,
-    }.get(order.layer_height, 1.0)
-
-    wall_coef = {
-        1: 1.0,
-        2: 1.15,
-        3: 1.3,
-    }.get(order.wall_thickness, 1.0)
-
-    infill_coef = 1 + (order.infill / 100)
-
-    size_coef = order.size / 10
-
-    total = (
-        base_price
-        * material_coef
-        * layer_coef
-        * wall_coef
-        * infill_coef
-        * size_coef
-        * order.quantity
+def calculate_print_price(
+    base_weight,
+    complexity,
+    supports_required,
+    recommended_wall_thickness,
+    size,
+    base_size,
+    infill,
+    wall_thickness,
+    material,
+    quality,
+    quantity=1
+):
+    from .models import MaterialPrice
+    material_price = MaterialPrice.objects.get(
+        material=material,
+        quality=quality
     )
 
-    return round(total, 2)
+    size_coefficient = (float(size) / float(base_size)) ** 3
+
+    infill_coefficient = 0.4 + float(infill) / 100
+
+    wall_coefficient = (
+        float(wall_thickness)
+        / float(recommended_wall_thickness)
+    )
+
+    estimated_weight = (
+        float(base_weight)
+        * size_coefficient
+        * infill_coefficient
+        * wall_coefficient
+        * float(complexity)
+    )
+
+    if supports_required:
+        estimated_weight *= 1.15
+
+    total_price = (
+        estimated_weight
+        * float(material_price.price_per_gram)
+        * quantity
+    )
+
+    return {
+        "weight": round(estimated_weight, 2),
+        "price": round(total_price, 2)
+    }
