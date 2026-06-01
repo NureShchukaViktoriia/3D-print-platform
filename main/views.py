@@ -6,6 +6,8 @@ from .forms import RegisterForm
 from .utils import calculate_order_price
 from .models import Model3D, Order, Category, Material, Favorite
 from .forms import OrderForm
+from django.contrib import messages
+from .forms import UserProfileForm
 
 def register_view(request):
     if request.method == 'POST':
@@ -168,3 +170,22 @@ def favorites_view(request):
     return render(request, 'main/favorites.html', {
         'favorites': favorites
     })
+
+@login_required
+def edit_profile(request):
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=request.user)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Профіль успішно оновлено.')
+            return redirect('profile')
+    else:
+        form = UserProfileForm(instance=request.user)
+
+    return render(request, 'main/edit_profile.html', {
+        'form': form
+    })
+
+def info(request):
+    return render(request, 'main/info.html')

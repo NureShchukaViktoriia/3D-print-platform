@@ -1,0 +1,134 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Інформація про FDM 3D-друк{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Головний заголовок -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">FDM 3D-друк</h1>
+        <p class="lead">Виготовляємо прототипи, корпуси та функціональні деталі з пластику FDM-методом</p>
+    </div>
+
+    <!-- Опис технології -->
+    <div class="row align-items-center mb-5">
+        <div class="col-md-6">
+            <h2>Технологія FDM</h2><br>
+            <h3 class="h5 text-muted">Прошаркове вирощування виробів із термопластику</h3><br>
+            <p><strong>3D друк (FDM)</strong> – це прошаркове побудова виробу з розплавленої пластикової нитки. Це найпоширеніший спосіб 3D-друку у світі. FDM-принтери працюють з різними типами пластиків: ASA, PLA, PET-G, NYLON, TPU 95А. Вироби відрізняються високою міцністю, гнучкістю та підходять для прототипування або готових об'єктів.</p>
+        </div>
+        <div class="col-md-6 text-center">
+    <img src="{% static 'img/fdm-3d-printing.jpg' %}" 
+         class="img-fluid w-75 rounded shadow" 
+         alt="FDM 3D друк"
+         onerror="this.src='https://tolocar.org/images/academy/digitalproduction/3dprinting/17_EN_The_main_components_of_a_3D_printer.png'">
+</div>
+    </div>
+
+    <!-- Переваги (картки) -->
+    <div class="row mb-5 g-4">
+        <div class="col-md-3">
+            <div class="card h-100 text-center p-3">
+                <div class="card-body">
+                    <h5 class="card-title">⚡ Швидке виготовлення</h5>
+                    <p class="card-text">Термін до 5 робочих днів завдяки 15 промисловим принтерам</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 text-center p-3">
+                <div class="card-body">
+                    <h5 class="card-title">🎨 Широкий вибір матеріалів</h5>
+                    <p class="card-text">PLA, ASA, PETG, TPU 95А, нейлон та композитні матеріали</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 text-center p-3">
+                <div class="card-body">
+                    <h5 class="card-title">🔧 Гарантія якості</h5>
+                    <p class="card-text">Контроль на кожному етапі та гарантія на всі вироби</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 text-center p-3">
+                <div class="card-body">
+                    <h5 class="card-title">💰 Економія до 40%</h5>
+                    <p class="card-text">Оптимізація заповнення та розташування моделі знижує вартість</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Як це працює? -->
+    <div class="bg-light p-4 rounded-3 mb-5">
+        <h2 class="text-center mb-4">Як це працює?</h2>
+        <div class="row text-center">
+            <div class="col-md-3">
+                <h4>1. Підготовка 3D-моделі</h4>
+                <p>Нарізка та підготовка файлу</p>
+            </div>
+            <div class="col-md-3">
+                <h4>2. Калібрування обладнання</h4>
+                <p>Налаштування принтера</p>
+            </div>
+            <div class="col-md-3">
+                <h4>3. Прошаркове вирощування</h4>
+                <p>Власне процес друку</p>
+            </div>
+            <div class="col-md-3">
+                <h4>4. Післяобробка</h4>
+                <p>Очищення та контроль якості</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Таблиця вартості друку (лише інформація) -->
+    <h2 class="mb-3">Вартість друку</h2>
+    <div class="table-responsive mb-4">
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Матеріал</th>
+                    <th>Висока точність (100μm)</th>
+                    <th>Стандарт (200μm)</th>
+                    <th>Економ (300μm)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>PLA/PETG</td><td>9 грн/грам</td><td>7 грн/грам</td><td>5 грн/грам</td></tr>
+                <tr><td>ASA/NYLON</td><td>12 грн/грам</td><td>10 грн/грам</td><td>8 грн/грам</td></tr>
+                <tr><td>TPU 95А</td><td>14 грн/грам</td><td>12 грн/грам</td><td>10 грн/грам</td></tr>
+                <tr><td>PETG CF10 (карбонове волокно)</td><td>❌</td><td>14 грн/грам</td><td>12 грн/грам</td></tr>
+                <tr><td>ABSpro UL 94 V-0 (вогнестійкий)</td><td>❌</td><td>27 грн/грам</td><td>23 грн/грам</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <p class="text-muted mb-4">* Остаточна вартість розраховується після аналізу 3D-моделі та включає об'єм матеріалу та час друку.</p>
+
+    <!-- Про 3D-друк (додаткові блоки) -->
+    <div class="row mt-5 g-3">
+        <div class="col-md-4">
+            <div class="p-3 border rounded h-100">
+                <h4>🚀 Швидко</h4>
+                <p>Термін до 5 робочих днів залежно від складності моделі</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 border rounded h-100">
+                <h4>✅ Якісно</h4>
+                <p>Професійні принтери та сертифіковані матеріали</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 border rounded h-100">
+                <h4>🔄 Гарантія</h4>
+                <p>Якщо дефект – безкоштовно надрукуємо заново</p>
+            </div>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}

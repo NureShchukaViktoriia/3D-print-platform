@@ -11,6 +11,9 @@
         <h5>Дані користувача</h5>
         <p><strong>Логін:</strong> {{ user.username }}</p>
         <p><strong>Email:</strong> {{ user.email }}</p>
+        <a href="{% url 'edit_profile' %}" class="btn btn-outline-primary">
+            Редагувати профіль
+        </a>
     </div>
 
     <div class="mb-4">
