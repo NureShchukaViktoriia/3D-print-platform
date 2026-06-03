@@ -4,8 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from .forms import RegisterForm
 from .utils import calculate_print_price
-from .models import Model3D, Order, Category, Material, Favorite
-from .forms import OrderForm
+from .models import Model3D, Order, OrderItem, Cart, CartItem, Category, Material, Favorite
+from .forms import OrderForm, CartItemForm
 from django.contrib import messages
 from .forms import UserProfileForm
 
@@ -106,7 +106,6 @@ def order_create(request, model_id):
                 order.user = request.user
 
             order.model = model
-            order.total_price = calculate_print_price(order, model)
             order.save()
 
             return redirect('order_success', order_id=order.id)
@@ -213,3 +212,143 @@ def recommended_price(self):
     )
 
     return result["price"]
+
+
+@login_required
+def cart_detail(request):
+    cart, created = Cart.objects.get_or_create(user=request.user)
+
+    return render(request, 'main/cart_detail.html', {
+        'cart': cart,
+        'items': cart.items.all(),
+        'total_price': cart.get_total_price()
+    })
+
+
+@login_required
+def cart_add(request, model_id):
+    model = get_object_or_404(Model3D, id=model_id)
+    cart, created = Cart.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        form = CartItemForm(request.POST)
+
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.cart = cart
+            item.model = model
+            item.save()
+
+            return redirect('cart_detail')
+    else:
+        form = CartItemForm(
+            material_id=model.recommended_material_id,
+            initial={
+                'material': model.recommended_material,
+                'quality': model.recommended_quality,
+                'size': model.recommended_size,
+                'wall_thickness': model.recommended_wall_thickness,
+                'infill': model.recommended_infill,
+                'quantity': 1,
+            }
+        )
+
+    return render(request, 'main/cart_add.html', {
+        'form': form,
+        'model': model
+    })
+
+
+@login_required
+def cart_item_edit(request, item_id):
+    item = get_object_or_404(
+        CartItem,
+        id=item_id,
+        cart__user=request.user
+    )
+
+    if request.method == 'POST':
+        form = CartItemForm(request.POST, instance=item)
+
+        if form.is_valid():
+            form.save()
+            return redirect('cart_detail')
+    else:
+        form = CartItemForm(instance=item)
+
+    return render(request, 'main/cart_item_edit.html', {
+        'form': form,
+        'item': item
+    })
+
+
+@login_required
+def cart_item_delete(request, item_id):
+    item = get_object_or_404(
+        CartItem,
+        id=item_id,
+        cart__user=request.user
+    )
+
+    item.delete()
+    return redirect('cart_detail')
+
+
+@login_required
+def order_create_from_cart(request):
+    cart = get_object_or_404(Cart, user=request.user)
+    items = cart.items.all()
+
+    if not items.exists():
+        return redirect('cart_detail')
+
+    if request.method == 'POST':
+        customer_name = request.POST.get('customer_name')
+        customer_phone = request.POST.get('customer_phone')
+
+        first_item = items.first()
+
+        order = Order.objects.create(
+            user=request.user,
+            model=first_item.model,
+            customer_name=customer_name,
+            customer_phone=customer_phone,
+            material=first_item.material,
+            quality=first_item.quality,
+            size=first_item.size,
+            wall_thickness=first_item.wall_thickness,
+            infill=first_item.infill,
+            quantity=first_item.quantity,
+            color=item.color
+        )
+
+        total_price = 0
+
+        for item in items:
+            OrderItem.objects.create(
+                order=order,
+                model=item.model,
+                material=item.material,
+                quality=item.quality,
+                size=item.size,
+                wall_thickness=item.wall_thickness,
+                infill=item.infill,
+                quantity=item.quantity,
+                color=item.color,
+                estimated_weight=item.estimated_weight,
+                total_price=item.total_price
+            )
+
+            total_price += item.total_price
+
+        order.total_price = total_price
+        order.save()
+
+        items.delete()
+
+        return redirect('order_success', order_id=order.id)
+
+    return render(request, 'main/order_create_from_cart.html', {
+        'items': items,
+        'total_price': cart.get_total_price()
+    })

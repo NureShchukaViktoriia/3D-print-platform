@@ -1,0 +1,21 @@
+{% extends 'main/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Додати до кошика: {{ model.name }}</h2>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <button type="submit" class="btn btn-success">
+            Додати до кошика
+        </button>
+
+        <a href="{% url 'model_detail' model.id %}" class="btn btn-secondary">
+            Назад
+        </a>
+    </form>
+</div>
+{% endblock %}

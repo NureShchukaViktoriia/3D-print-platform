@@ -1,0 +1,47 @@
+{% extends 'main/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Кошик</h2>
+
+    {% if items %}
+        {% for item in items %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>{{ item.model.name }}</h5>
+
+                    <p>
+                        Матеріал: {{ item.material.name }}<br>
+                        Колір: {{ item.color.name }}<br>
+                        Розмір: {{ item.size }}%<br>
+                        Висота шару: {{ item.quality.layer_height }} мкм<br>
+                        Товщина стінок: {{ item.wall_thickness }} мм<br>
+                        Заповнення: {{ item.infill }}%<br>
+                        Кількість: {{ item.quantity }}
+                    </p>
+
+                    <p>
+                        <strong>Ціна:</strong> {{ item.get_total_price }} грн
+                    </p>
+
+                    <a href="{% url 'cart_item_edit' item.id %}" class="btn btn-primary">
+                        Редагувати
+                    </a>
+
+                    <a href="{% url 'cart_item_delete' item.id %}" class="btn btn-outline-danger">
+                        Видалити
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+
+        <h4>Загальна вартість: {{ total_price }} грн</h4>
+
+        <a href="{% url 'order_create_from_cart' %}" class="btn btn-success">
+            Оформити замовлення
+        </a>
+    {% else %}
+        <p>Кошик порожній.</p>
+    {% endif %}
+</div>
+{% endblock %}

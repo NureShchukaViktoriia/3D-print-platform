@@ -91,7 +91,7 @@
 
 </div>
 
-<script>
+{% comment %} <script>
     const basePrice = Number("{{ model.base_price }}");
 
     const materialField = document.getElementById("id_material");
@@ -157,6 +157,6 @@
     });
 
     calculatePrice();
-</script>
+</script> {% endcomment %}
 
 {% endblock %}

@@ -18,6 +18,27 @@ class Material(models.Model):
     def __str__(self):
         return self.name
 
+class Color(models.Model):
+    name = models.CharField(
+        max_length=50,
+        verbose_name="Назва кольору"
+    )
+
+    code = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        verbose_name="Код кольору"
+    )
+
+    materials = models.ManyToManyField(
+        Material,
+        related_name="colors",
+        verbose_name="Доступний для матеріалів"
+    )
+
+    def __str__(self):
+        return self.name
 
 class PrintQuality(models.Model):
     name = models.CharField(max_length=100, verbose_name="Назва якості")
@@ -101,11 +122,14 @@ class Model3D(models.Model):
         verbose_name="Рекомендована якість друку"
     )
 
-    recommended_wall_thickness = models.DecimalField(
-        max_digits=4,
-        decimal_places=2,
-        default=1.2,
-        verbose_name="Рекомендована товщина стінок, мм"
+    recommended_wall_thickness = models.PositiveIntegerField(
+        choices=[
+            (1, '1 мм'),
+            (2, '2 мм'),
+            (3, '3 мм'),
+        ],
+        default=2,
+        verbose_name="Рекомендована товщина стінок"
     )
 
     recommended_infill = models.PositiveIntegerField(
@@ -138,6 +162,7 @@ class Model3D(models.Model):
         default=1.00,
         verbose_name="Коефіцієнт складності"
     )
+
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -198,67 +223,22 @@ class Order(models.Model):
         ('completed', 'Завершено'),
     ]
 
-    COLOR_CHOICES = [
-        ('white', 'Білий'),
-        ('black', 'Чорний'),
-        ('gray', 'Сірий'),
-        ('red', 'Червоний'),
-        ('blue', 'Синій'),
-        ('green', 'Зелений'),
-    ]
-
-    model = models.ForeignKey(
-        Model3D,
-        on_delete=models.CASCADE,
-        verbose_name="Модель"
-    )
-
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         null=True,
-        blank=True
+        blank=True,
+        verbose_name="Користувач"
     )
 
-    customer_name = models.CharField(max_length=100, verbose_name="Ім'я")
-    customer_phone = models.CharField(max_length=20, verbose_name="Телефон")
-
-    material = models.ForeignKey(
-        Material,
-        on_delete=models.PROTECT,
-        verbose_name="Матеріал"
+    customer_name = models.CharField(
+        max_length=100,
+        verbose_name="Ім'я"
     )
 
-    quality = models.ForeignKey(
-        PrintQuality,
-        on_delete=models.PROTECT,
-        verbose_name="Якість друку"
-    )
-
-    size = models.PositiveIntegerField(verbose_name="Розмір, см")
-
-    wall_thickness = models.DecimalField(
-        max_digits=4,
-        decimal_places=2,
-        verbose_name="Товщина стінок, мм"
-    )
-
-    infill = models.PositiveIntegerField(verbose_name="Заповнення, %")
-
-    quantity = models.PositiveIntegerField(default=1, verbose_name="Кількість")
-
-    color = models.CharField(
+    customer_phone = models.CharField(
         max_length=20,
-        choices=COLOR_CHOICES,
-        default='white',
-        verbose_name="Колір"
-    )
-
-    estimated_weight = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        default=0,
-        verbose_name="Орієнтовна вага, г"
+        verbose_name="Телефон"
     )
 
     total_price = models.DecimalField(
@@ -275,10 +255,92 @@ class Order(models.Model):
         verbose_name="Статус"
     )
 
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Дата створення"
+    )
+
+    def __str__(self):
+        return f"Замовлення #{self.id}"
+    
+class Cart(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='cart',
+        verbose_name='Користувач'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def calculate_price(self):
+    def get_total_price(self):
+        return sum(item.total_price for item in self.items.all())
 
+    def __str__(self):
+        return f"Кошик {self.user.username}"
+
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(
+        Cart,
+        on_delete=models.CASCADE,
+        related_name='items',
+        verbose_name='Кошик'
+    )
+
+    model = models.ForeignKey(
+        Model3D,
+        on_delete=models.CASCADE,
+        verbose_name='Модель'
+    )
+
+    material = models.ForeignKey(
+        Material,
+        on_delete=models.PROTECT,
+        verbose_name='Матеріал'
+    )
+
+    quality = models.ForeignKey(
+        PrintQuality,
+        on_delete=models.PROTECT,
+        verbose_name='Якість друку'
+    )
+
+    size = models.PositiveIntegerField(verbose_name='Розмір, см')
+
+    wall_thickness = models.PositiveIntegerField(
+        choices=[
+            (1, '1 мм'),
+            (2, '2 мм'),
+            (3, '3 мм'),
+        ],
+        default=2,
+        verbose_name='Товщина стінок'
+    )
+
+    infill = models.PositiveIntegerField(verbose_name='Заповнення, %')
+
+    quantity = models.PositiveIntegerField(default=1, verbose_name='Кількість')
+    
+    color = models.ForeignKey(
+        Color,
+        on_delete=models.PROTECT,
+        verbose_name="Колір"
+    )
+
+    estimated_weight = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=0
+    )
+
+    total_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0
+    )
+
+    def calculate_price(self):
         result = calculate_print_price(
             base_weight=self.model.base_weight,
             complexity=self.model.complexity,
@@ -301,8 +363,81 @@ class Order(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Замовлення #{self.id}"
+        return f"{self.model.name} x {self.quantity}"
+
+
+class OrderItem(models.Model):
+
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name='items',
+        verbose_name='Замовлення'
+    )
+
+    model = models.ForeignKey(
+        Model3D,
+        on_delete=models.CASCADE,
+        verbose_name="Модель"
+    )
+
+    material = models.ForeignKey(
+        Material,
+        on_delete=models.PROTECT,
+        verbose_name="Матеріал"
+    )
+
+    quality = models.ForeignKey(
+        PrintQuality,
+        on_delete=models.PROTECT,
+        verbose_name="Якість друку"
+    )
+
+    size = models.PositiveIntegerField(
+        verbose_name="Розмір, см"
+    )
+
+    wall_thickness = models.PositiveIntegerField(
+        choices=[
+            (1, '1 мм'),
+            (2, '2 мм'),
+            (3, '3 мм'),
+        ],
+        default=2,
+        verbose_name="Товщина стінок"
+    )
+
+    infill = models.PositiveIntegerField(
+        verbose_name="Заповнення, %"
+    )
+
+    quantity = models.PositiveIntegerField(
+        default=1,
+        verbose_name="Кількість"
+    )
+
+    color = models.ForeignKey(
+        Color,
+        on_delete=models.PROTECT,
+        verbose_name="Колір"
+    )
     
+    estimated_weight = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=0,
+        verbose_name="Орієнтовна вага, г"
+    )
+
+    total_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        verbose_name="Ціна позиції"
+    )
+
+    def __str__(self):
+        return f"{self.model.name} x {self.quantity}"
 
 class Favorite(models.Model):
     user = models.ForeignKey(

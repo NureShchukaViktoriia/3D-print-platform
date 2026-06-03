@@ -16,4 +16,9 @@ urlpatterns = [
     path('favorite/<int:model_id>/', views.toggle_favorite, name='toggle_favorite'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
     path('info/', views.info, name='info'),
+    path('cart/', views.cart_detail, name='cart_detail'),
+    path('cart/add/<int:model_id>/', views.cart_add, name='cart_add'),
+    path('cart/item/<int:item_id>/edit/', views.cart_item_edit, name='cart_item_edit'),
+    path('cart/item/<int:item_id>/delete/', views.cart_item_delete, name='cart_item_delete'),
+    path('cart/order/', views.order_create_from_cart, name='order_create_from_cart'),
 ]

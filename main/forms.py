@@ -1,5 +1,5 @@
 from django import forms
-from .models import Order
+from .models import Order, CartItem, Color
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
@@ -19,6 +19,28 @@ class OrderForm(forms.ModelForm):
         fields = [
             'customer_name',
             'customer_phone',
+        ]
+
+        widgets = {
+            'customer_name': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': "Ім'я"
+                }
+            ),
+
+            'customer_phone': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Телефон'
+                }
+            ),
+        }
+
+class CartItemForm(forms.ModelForm):
+    class Meta:
+        model = CartItem
+        fields = [
             'material',
             'quality',
             'size',
@@ -29,71 +51,31 @@ class OrderForm(forms.ModelForm):
         ]
 
         widgets = {
-            'customer_name': forms.TextInput(
-                attrs={'class': 'form-control'}
-            ),
-
-            'customer_phone': forms.TextInput(
-                attrs={'class': 'form-control'}
-            ),
-
-            'material': forms.Select(
-                attrs={'class': 'form-select'},
-                choices=[
-                    ('PLA', 'PLA'),
-                    ('PETG', 'PETG'),
-                    ('ABS', 'ABS'),
-                ]
-            ),
-
-            'size': forms.NumberInput(
-                attrs={'class': 'form-control'}
-            ),
-
-            'quality': forms.Select(
-                attrs={'class': 'form-select'},
-                choices=[
-                    (100, '100 мкм'),
-                    (200, '200 мкм'),
-                    (300, '300 мкм'),
-                ]
-            ),
-
-            'wall_thickness': forms.Select(
-                attrs={'class': 'form-select'},
-                choices=[
-                    (1, '1 мм'),
-                    (2, '2 мм'),
-                    (3, '3 мм'),
-                ]
-            ),
-
-            'infill': forms.Select(
-                attrs={'class': 'form-select'},
-                choices=[
-                    (5, '5%'),
-                    (10, '10%'),
-                    (25, '25%'),
-                    (50, '50%'),
-                    (75, '75%'),
-                    (100, '100%'),
-                ]
-            ),
-
-            'color': forms.Select(
-                attrs={'class': 'form-select'},
-                choices=Order.COLOR_CHOICES
-            ),
-
-            'quantity': forms.NumberInput(
-                attrs={
-                    'class': 'form-control',
-                    'min': 1,
-                    'value': 1
-                }
-            ),
+            'material': forms.Select(attrs={'class': 'form-select'}),
+            'quality': forms.Select(attrs={'class': 'form-select'}),
+            'size': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+            'wall_thickness': forms.Select(attrs={'class': 'form-select'}),
+            'infill': forms.Select(attrs={'class': 'form-select'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+            'color': forms.Select(attrs={'class': 'form-select'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        material_id = kwargs.pop('material_id', None)
+
+        super().__init__(*args, **kwargs)
+
+        if self.data.get('material'):
+            material_id = self.data.get('material')
+        elif self.instance and self.instance.pk:
+            material_id = self.instance.material_id
+
+        if material_id:
+            self.fields['color'].queryset = Color.objects.filter(
+                materials__id=material_id
+            )
+        else:
+            self.fields['color'].queryset = Color.objects.all()
 
 class UserProfileForm(forms.ModelForm):
     class Meta:

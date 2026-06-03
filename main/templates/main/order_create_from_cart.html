@@ -1,0 +1,68 @@
+{% extends 'main/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h2>Оформлення замовлення</h2>
+
+    {% for item in items %}
+        <div class="card mb-3">
+            <div class="card-body">
+
+                <h5>{{ item.model.name }}</h5>
+
+                <p>
+                    Матеріал: {{ item.material.name }}<br>
+                    Якість: {{ item.quality.layer_height }} мкм<br>
+                    Розмір: {{ item.size }} см<br>
+                    Заповнення: {{ item.infill }}%<br>
+                    Кількість: {{ item.quantity }}<br>
+                    Колір: {{ item.color.name }}
+                </p>
+
+                <strong>
+                    {{ item.total_price }} грн
+                </strong>
+
+            </div>
+        </div>
+    {% endfor %}
+
+    <h4>
+        Загальна сума: {{ total_price }} грн
+    </h4>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label">
+                Ім'я
+            </label>
+
+            <input
+                type="text"
+                name="customer_name"
+                class="form-control"
+                required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">
+                Телефон
+            </label>
+
+            <input
+                type="text"
+                name="customer_phone"
+                class="form-control"
+                required>
+        </div>
+
+        <button type="submit" class="btn btn-success">
+            Підтвердити замовлення
+        </button>
+    </form>
+
+</div>
+{% endblock %}
