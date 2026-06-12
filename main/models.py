@@ -233,6 +233,11 @@ class Order(models.Model):
         ('completed', 'Завершено'),
     ]
 
+    DELIVERY_CHOICES = [
+        ('nova_poshta', 'Нова пошта'),
+        ('ukr_poshta', 'Укрпошта'),
+    ]
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -249,6 +254,31 @@ class Order(models.Model):
     customer_phone = models.CharField(
         max_length=20,
         verbose_name="Телефон"
+    )
+
+    city = models.CharField(
+        max_length=100,
+        default="Не вказано",
+        verbose_name="Населений пункт"
+    )
+
+    delivery_address = models.CharField(
+        max_length=255,
+        default="Не вказано",
+        verbose_name="Адреса / відділення пошти"
+    )
+
+    delivery_method = models.CharField(
+        max_length=20,
+        choices=DELIVERY_CHOICES,
+        default='nova_poshta',
+        verbose_name="Спосіб доставки"
+    )
+
+    payment_info = models.CharField(
+        max_length=100,
+        default="Оплата при отриманні замовлення на пошті",
+        verbose_name="Оплата"
     )
 
     total_price = models.DecimalField(

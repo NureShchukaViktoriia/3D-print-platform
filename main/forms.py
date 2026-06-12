@@ -12,29 +12,36 @@ class RegisterForm(UserCreationForm):
 
 
 class OrderForm(forms.ModelForm):
-
     class Meta:
         model = Order
-
         fields = [
             'customer_name',
             'customer_phone',
+            'city',
+            'delivery_address',
+            'delivery_method',
         ]
 
         widgets = {
-            'customer_name': forms.TextInput(
-                attrs={
-                    'class': 'form-control',
-                    'placeholder': "Ім'я"
-                }
-            ),
-
-            'customer_phone': forms.TextInput(
-                attrs={
-                    'class': 'form-control',
-                    'placeholder': 'Телефон'
-                }
-            ),
+            'customer_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': "Введіть ім'я отримувача"
+            }),
+            'customer_phone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '+380...'
+            }),
+            'city': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Наприклад: Харків'
+            }),
+            'delivery_address': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Адреса або номер відділення пошти'
+            }),
+            'delivery_method': forms.Select(attrs={
+                'class': 'form-select'
+            }),
         }
 
 class CartItemForm(forms.ModelForm):

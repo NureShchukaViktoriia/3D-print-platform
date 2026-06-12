@@ -99,8 +99,10 @@
     <main class="flex-grow-1">
         {% block content %}
         {% endblock %}
+        <div style="height: 80px;"></div>
     </main>
-    <footer class="bg-dark text-light py-4 mt-auto">
+
+    <footer class="bg-dark text-secondary py-4 mt-auto">
         <div class="container">
             <div class="row">
 
@@ -115,20 +117,20 @@
                     <h5>Навігація</h5>
                     <ul class="list-unstyled">
                         <li>
-                            <a href="{% url 'catalog' %}" class="text-light text-decoration-none">
+                            <a href="{% url 'catalog' %}" class="text-secondary text-decoration-none">
                                 Каталог
                             </a>
                         </li>
 
                         {% if user.is_authenticated %}
                         <li>
-                            <a href="{% url 'cart_detail' %}" class="text-light text-decoration-none">
+                            <a href="{% url 'cart_detail' %}" class="text-secondary text-decoration-none">
                                 Кошик
                             </a>
                         </li>
 
                         <li>
-                            <a href="{% url 'profile' %}" class="text-light text-decoration-none">
+                            <a href="{% url 'profile' %}" class="text-secondary text-decoration-none">
                                 Профіль
                             </a>
                         </li>

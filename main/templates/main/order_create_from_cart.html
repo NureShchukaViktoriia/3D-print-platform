@@ -2,67 +2,57 @@
 
 {% block content %}
 <div class="container mt-4">
-
     <h2>Оформлення замовлення</h2>
 
-    {% for item in items %}
-        <div class="card mb-3">
-            <div class="card-body">
+    <div class="alert alert-info mt-3">
+        <strong>Оплата:</strong>
+        оплата здійснюється при отриманні замовлення у відділенні пошти.
+    </div>
 
-                <h5>{{ item.model.name }}</h5>
+    <h4 class="mt-4">Ваше замовлення</h4>
 
-                <p>
-                    Матеріал: {{ item.material.name }}<br>
-                    Якість: {{ item.quality.layer_height }} мкм<br>
-                    Розмір: {{ item.size }} см<br>
-                    Заповнення: {{ item.infill }}%<br>
-                    Кількість: {{ item.quantity }}<br>
-                    Колір: {{ item.color.name }}
-                </p>
+    <table class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>Модель</th>
+                <th>Матеріал</th>
+                <th>Колір</th>
+                <th>Кількість</th>
+                <th>Ціна</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.model.name }}</td>
+                <td>{{ item.material.name }}</td>
+                <td>{{ item.color.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.total_price }} грн</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-                <strong>
-                    {{ item.total_price }} грн
-                </strong>
+    <h5 class="text-end">
+        Загальна вартість: {{ total_price }} грн
+    </h5>
 
-            </div>
-        </div>
-    {% endfor %}
-
-    <h4>
-        Загальна сума: {{ total_price }} грн
-    </h4>
+    <h4 class="mt-4">Дані для доставки</h4>
 
     <form method="post">
-        {% csrf_token %}
+    {% csrf_token %}
 
-        <div class="mb-3">
-            <label class="form-label">
-                Ім'я
-            </label>
+    {{ form.as_p }}
 
-            <input
-                type="text"
-                name="customer_name"
-                class="form-control"
-                required>
-        </div>
+    <div class="alert alert-info">
+        Оплата здійснюється при отриманні замовлення на пошті.
+    </div>
 
-        <div class="mb-3">
-            <label class="form-label">
-                Телефон
-            </label>
-
-            <input
-                type="text"
-                name="customer_phone"
-                class="form-control"
-                required>
-        </div>
-
-        <button type="submit" class="btn btn-success">
-            Підтвердити замовлення
-        </button>
-    </form>
+    <button type="submit" class="btn btn-success">
+        Підтвердити замовлення
+    </button>
+</form>
 
 </div>
 {% endblock %}

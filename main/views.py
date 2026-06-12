@@ -42,6 +42,7 @@ def catalog(request):
     material_id = request.GET.get('material')
     min_price = request.GET.get('min_price')
     max_price = request.GET.get('max_price')
+    sort = request.GET.get('sort')
 
     if query:
         models = models.filter(name__icontains=query)
@@ -52,23 +53,48 @@ def catalog(request):
     if material_id:
         models = models.filter(recommended_material_id=material_id)
 
+    models_with_prices = []
+
+    for model in models:
+        price_data = calculate_print_price(
+            base_weight=model.base_weight,
+            complexity=model.complexity,
+            supports_required=model.supports_required,
+            recommended_wall_thickness=model.recommended_wall_thickness,
+            size=model.recommended_size,
+            base_size=model.base_size,
+            infill=model.recommended_infill,
+            wall_thickness=model.recommended_wall_thickness,
+            material=model.recommended_material,
+            quality=model.recommended_quality,
+            quantity=1
+        )
+
+        models_with_prices.append((model, price_data['price']))
+
     if min_price:
-        models = models.filter(base_price__gte=min_price)
+        models_with_prices = [
+            item for item in models_with_prices
+            if item[1] >= float(min_price)
+        ]
 
     if max_price:
-        models = models.filter(base_price__lte=max_price)
-
-    sort = request.GET.get('sort')
+        models_with_prices = [
+            item for item in models_with_prices
+            if item[1] <= float(max_price)
+        ]
 
     if sort == 'price_asc':
-        models = models.order_by('base_price')
+        models_with_prices.sort(key=lambda item: item[1])
     elif sort == 'price_desc':
-        models = models.order_by('-base_price')
+        models_with_prices.sort(key=lambda item: item[1], reverse=True)
     elif sort == 'name':
-        models = models.order_by('name')
+        models_with_prices.sort(key=lambda item: item[0].name.lower())
     elif sort == 'newest':
-        models = models.order_by('-created_at')
-    
+        models_with_prices.sort(key=lambda item: item[0].created_at, reverse=True)
+
+    models_list = [item[0] for item in models_with_prices]
+
     favorite_ids = []
 
     if request.user.is_authenticated:
@@ -80,10 +106,16 @@ def catalog(request):
         request,
         'main/catalog.html',
         {
-            'models': models,
+            'models': models_list,
             'categories': categories,
             'materials': materials,
-            'favorite_ids': favorite_ids
+            'favorite_ids': favorite_ids,
+            'selected_category': category_id,
+            'selected_material': material_id,
+            'min_price': min_price,
+            'max_price': max_price,
+            'query': query,
+            'sort': sort,
         }
     )
 
@@ -307,53 +339,59 @@ def order_create_from_cart(request):
     if not items.exists():
         return redirect('cart_detail')
 
+    initial_data = {
+        'customer_name': request.user.get_full_name() or request.user.username,
+        'customer_phone': getattr(request.user, 'phone', ''),
+    }
+
     if request.method == 'POST':
-        customer_name = request.POST.get('customer_name')
-        customer_phone = request.POST.get('customer_phone')
+        form = OrderForm(request.POST)
 
-        first_item = items.first()
+        if form.is_valid():
+            first_item = items.first()
 
-        order = Order.objects.create(
-            user=request.user,
-            model=first_item.model,
-            customer_name=customer_name,
-            customer_phone=customer_phone,
-            material=first_item.material,
-            quality=first_item.quality,
-            size=first_item.size,
-            wall_thickness=first_item.wall_thickness,
-            infill=first_item.infill,
-            quantity=first_item.quantity,
-            color=item.color
-        )
+            order = form.save(commit=False)
+            order.user = request.user
 
-        total_price = 0
+            # Дані з першої позиції кошика, якщо ці поля ще є в Order
+            order.model = first_item.model
+            order.material = first_item.material
+            order.quality = first_item.quality
+            order.size = first_item.size
+            order.wall_thickness = first_item.wall_thickness
+            order.infill = first_item.infill
+            order.quantity = first_item.quantity
+            order.color = first_item.color
 
-        for item in items:
-            OrderItem.objects.create(
-                order=order,
-                model=item.model,
-                material=item.material,
-                quality=item.quality,
-                size=item.size,
-                wall_thickness=item.wall_thickness,
-                infill=item.infill,
-                quantity=item.quantity,
-                color=item.color,
-                estimated_weight=item.estimated_weight,
-                total_price=item.total_price
-            )
+            order.payment_info = "Оплата при отриманні замовлення на пошті"
+            order.total_price = cart.get_total_price()
 
-            total_price += item.total_price
+            order.save()
 
-        order.total_price = total_price
-        order.save()
+            for item in items:
+                OrderItem.objects.create(
+                    order=order,
+                    model=item.model,
+                    material=item.material,
+                    quality=item.quality,
+                    size=item.size,
+                    wall_thickness=item.wall_thickness,
+                    infill=item.infill,
+                    quantity=item.quantity,
+                    color=item.color,
+                    estimated_weight=item.estimated_weight,
+                    total_price=item.total_price
+                )
 
-        items.delete()
+            items.delete()
 
-        return redirect('order_success', order_id=order.id)
+            return redirect('order_success', order_id=order.id)
+
+    else:
+        form = OrderForm(initial=initial_data)
 
     return render(request, 'main/order_create_from_cart.html', {
+        'form': form,
         'items': items,
         'total_price': cart.get_total_price()
     })
