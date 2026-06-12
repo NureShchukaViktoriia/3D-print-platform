@@ -163,6 +163,16 @@ class Model3D(models.Model):
         verbose_name="Коефіцієнт складності"
     )
 
+    min_size = models.PositiveIntegerField(
+        default=3,
+        verbose_name="Мінімальний розмір, см"
+    )
+
+    max_size = models.PositiveIntegerField(
+        default=25,
+        verbose_name="Максимальний розмір, см"
+    )
+
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -318,7 +328,18 @@ class CartItem(models.Model):
         verbose_name='Товщина стінок'
     )
 
-    infill = models.PositiveIntegerField(verbose_name='Заповнення, %')
+    infill = models.PositiveIntegerField(
+        choices=[
+            (5, '5%'),
+            (10, '10%'),
+            (25, '25%'),
+            (50, '50%'),
+            (75, '75%'),
+            (100, '100%'),
+        ],
+        default=25,
+        verbose_name='Заповнення, %'
+    )
 
     quantity = models.PositiveIntegerField(default=1, verbose_name='Кількість')
     

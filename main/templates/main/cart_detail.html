@@ -13,7 +13,7 @@
                     <p>
                         Матеріал: {{ item.material.name }}<br>
                         Колір: {{ item.color.name }}<br>
-                        Розмір: {{ item.size }}%<br>
+                        Розмір: {{ item.size }}<br>
                         Висота шару: {{ item.quality.layer_height }} мкм<br>
                         Товщина стінок: {{ item.wall_thickness }} мм<br>
                         Заповнення: {{ item.infill }}%<br>
@@ -21,7 +21,7 @@
                     </p>
 
                     <p>
-                        <strong>Ціна:</strong> {{ item.get_total_price }} грн
+                        <strong>Ціна: {{ item.total_price }} грн </strong>
                     </p>
 
                     <a href="{% url 'cart_item_edit' item.id %}" class="btn btn-primary">

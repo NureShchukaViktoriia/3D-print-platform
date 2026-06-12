@@ -77,6 +77,29 @@ class CartItemForm(forms.ModelForm):
         else:
             self.fields['color'].queryset = Color.objects.all()
 
+    def clean_size(self):
+        size = self.cleaned_data['size']
+
+        model = None
+
+        if self.instance and self.instance.pk:
+            model = self.instance.model
+        else:
+            model = self.initial.get('model')
+
+        if model:
+            if size < model.min_size:
+                raise forms.ValidationError(
+                    f"Мінімальний розмір: {model.min_size} см"
+                )
+
+            if size > model.max_size:
+                raise forms.ValidationError(
+                    f"Максимальний розмір: {model.max_size} см"
+                )
+
+        return size
+
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User

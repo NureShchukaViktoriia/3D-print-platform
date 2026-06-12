@@ -4,8 +4,19 @@
 <div class="container mt-4">
     <h2>Додати до кошика: {{ model.name }}</h2>
 
+    <div class="alert alert-info mt-3">
+        Орієнтовна вага: <strong><span id="weight">0</span> г</strong><br>
+        Орієнтовна ціна: <strong><span id="price">0</span> грн</strong>
+    </div>
+
     <form method="post">
         {% csrf_token %}
+
+        <p class="text-muted">
+            Допустимий розмір:
+            від {{ model.min_size }} см
+            до {{ model.max_size }} см
+        </p>
 
         {{ form.as_p }}
 
@@ -18,4 +29,75 @@
         </a>
     </form>
 </div>
+
+<script>
+    const materialSelect = document.getElementById("id_material");
+    const colorSelect = document.getElementById("id_color");
+
+    materialSelect.addEventListener("change", function () {
+        const materialId = this.value;
+
+        colorSelect.innerHTML = "";
+
+        fetch(`/ajax/colors/?material_id=${materialId}`)
+            .then(response => response.json())
+            .then(data => {
+                data.colors.forEach(color => {
+                    const option = document.createElement("option");
+                    option.value = color.id;
+                    option.textContent = color.name;
+                    colorSelect.appendChild(option);
+                });
+            });
+    });
+
+
+    const modelId = "{{ model.id }}";
+
+    const qualitySelect = document.getElementById("id_quality");
+    
+    const sizeInput = document.getElementById("id_size");
+    sizeInput.setAttribute("min", "{{ model.min_size }}");
+    sizeInput.setAttribute("max", "{{ model.max_size }}");
+
+    const wallThicknessSelect = document.getElementById("id_wall_thickness");
+    const infillSelect = document.getElementById("id_infill");
+    const quantityInput = document.getElementById("id_quantity");
+
+    const priceOutput = document.getElementById("price");
+    const weightOutput = document.getElementById("weight");
+
+    function calculatePrice() {
+        const materialId = materialSelect.value;
+        const qualityId = qualitySelect.value;
+        const size = sizeInput.value;
+        const wallThickness = wallThicknessSelect.value;
+        const infill = infillSelect.value;
+        const quantity = quantityInput.value;
+
+        if (!materialId || !qualityId || !size || !wallThickness || !infill || !quantity) {
+            return;
+        }
+
+        const url = `/ajax/calculate-cart-price/?model_id=${modelId}&material_id=${materialId}&quality_id=${qualityId}&size=${size}&wall_thickness=${wallThickness}&infill=${infill}&quantity=${quantity}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.error) {
+                    priceOutput.textContent = data.price;
+                    weightOutput.textContent = data.weight;
+                }
+            });
+    }
+
+    materialSelect.addEventListener("change", calculatePrice);
+    qualitySelect.addEventListener("change", calculatePrice);
+    sizeInput.addEventListener("input", calculatePrice);
+    wallThicknessSelect.addEventListener("change", calculatePrice);
+    infillSelect.addEventListener("change", calculatePrice);
+    quantityInput.addEventListener("input", calculatePrice);
+
+    document.addEventListener("DOMContentLoaded", calculatePrice);
+</script>
 {% endblock %}

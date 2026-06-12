@@ -1,23 +1,253 @@
 {% extends 'main/base.html' %}
 
-{% block title %}
-Головна
-{% endblock %}
-
 {% block content %}
 
-<div class="container mt-5">
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center">
 
-    <h1 class="mb-4">
-        Веб-платформа для замовлення 3D-друку
-    </h1>
+            <div class="col-md-6">
+                <h1 class="display-4 fw-bold">
+                    3D Print Studio
+                </h1>
+                <p class="lead mt-3">
+                    Веб-платформа для вибору 3D-моделей, налаштування параметрів друку
+                    та оформлення замовлення онлайн.
+                </p>
+                <a href="{% url 'catalog' %}" class="btn btn-primary btn-lg mt-3">
+                    Перейти до каталогу
+                </a>
+            </div>
 
-    <p>
-        Платформа для перегляду моделей,
-        вибору параметрів друку
-        та оформлення замовлення.
-    </p>
+            <div class="col-md-6 text-center">
+                <img src="https://images.openai.com/static-rsc-4/VSUjAqciPHV3O3f3ugVPd7OPbj2RBX96WFFzeu9ziTFNzzAf2BxXhU8Lit8OVecgs1_vN4KIG8jlMrzx757Dt1IfoYBICBCrwOKXjjRh0PBglOPgt1YwQt8WUDclbOsMRviD146PZ9pMB0d6GR-9K61aWcPU3Zp1bftK3dtktozuwznEHkELAJiJBHltERf2?purpose=fullsize"
+                     class="img-fluid rounded shadow"
+                     alt="3D друк">
+            </div>
 
-</div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-4">Як працює сервіс</h2>
+
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="card h-100 text-center shadow-sm">
+                    <div class="card-body">
+                        <h5>1. Оберіть модель</h5>
+                        <p>Перегляньте каталог готових моделей для 3D-друку.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card h-100 text-center shadow-sm">
+                    <div class="card-body">
+                        <h5>2. Налаштуйте друк</h5>
+                        <p>Оберіть матеріал, колір, якість, розмір та заповнення.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card h-100 text-center shadow-sm">
+                    <div class="card-body">
+                        <h5>3. Додайте в кошик</h5>
+                        <p>Система автоматично розрахує вагу та вартість друку.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card h-100 text-center shadow-sm">
+                    <div class="card-body">
+                        <h5>4. Оформіть замовлення</h5>
+                        <p>Перевірте кошик та підтвердіть замовлення.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-4">Приклади моделей</h2>
+
+        <div class="row g-4">
+            {% for model in featured_models %}
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    {% if model.images.first %}
+                        <img src="{{ model.images.first.image.url }}"
+                             class="card-img-top"
+                             style="height: 220px; object-fit: cover;"
+                             alt="{{ model.name }}">
+                    {% endif %}
+
+                    <div class="card-body">
+                        <h5 class="card-title">{{ model.name }}</h5>
+                        <p class="card-text">
+                            {{ model.description|truncatewords:18 }}
+                        </p>
+                        <a href="{% url 'model_detail' model.id %}" class="btn btn-outline-primary">
+                            Детальніше
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-center">Поки що моделей немає.</p>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{% url 'catalog' %}" class="btn btn-primary">
+                Переглянути весь каталог
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-4">Матеріали для друку</h2>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5>PLA</h5>
+                        <p>Популярний матеріал для декоративних моделей та прототипів.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5>PETG</h5>
+                        <p>Міцний та універсальний матеріал для практичних деталей.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5>TPU 95A</h5>
+                        <p>Гнучкий матеріал для еластичних виробів та захисних елементів.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-4">Переваги платформи</h2>
+
+        <div class="row g-4 text-center">
+            <div class="col-md-3">
+                <h5>Швидкий розрахунок</h5>
+                <p>Ціна змінюється автоматично залежно від параметрів.</p>
+            </div>
+
+            <div class="col-md-3">
+                <h5>Каталог моделей</h5>
+                <p>Користувач може обрати готову модель для друку.</p>
+            </div>
+
+            <div class="col-md-3">
+                <h5>Вибір матеріалів</h5>
+                <p>Доступні різні матеріали та кольори.</p>
+            </div>
+
+            <div class="col-md-3">
+                <h5>Зручний кошик</h5>
+                <p>Можна додати кілька моделей та оформити одне замовлення.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-4">Поширені запитання</h2>
+
+        <div class="accordion" id="faqAccordion">
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="faqOne">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                        Які матеріали доступні для друку?
+                    </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Для друку доступні PLA, PETG, ASA, NYLON та TPU 95A.
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="faqTwo">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                        Як розраховується ціна?
+                    </button>
+                </h2>
+                <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Вартість залежить від матеріалу, якості друку, розміру моделі,
+                        товщини стінок, заповнення та кількості.
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="faqThree">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                        Чи можна обрати колір?
+                    </button>
+                </h2>
+                <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Так, колір обирається залежно від наявності вибраного матеріалу.
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="faqFour">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour">
+                        Чи можна замовити кілька моделей?
+                    </button>
+                </h2>
+                <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Так, користувач може додати кілька моделей у кошик і оформити їх одним замовленням.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-dark text-light text-center">
+    <div class="container">
+        <h2>Готові замовити 3D-друк?</h2>
+        <p class="mt-3">
+            Перейдіть до каталогу, оберіть модель та налаштуйте параметри друку.
+        </p>
+        <a href="{% url 'catalog' %}" class="btn btn-primary btn-lg mt-2">
+            Перейти до каталогу
+        </a>
+    </div>
+</section>
 
 {% endblock %}

@@ -8,6 +8,11 @@
 
     <form method="post">
         {% csrf_token %}
+        <p class="text-muted">
+            Допустимий розмір:
+            від {{ item.model.min_size }} см
+            до {{ item.model.max_size }} см
+        </p>
 
         {{ form.as_p }}
 
@@ -20,4 +25,40 @@
         </a>
     </form>
 </div>
+
+<script>
+    const materialSelect = document.getElementById("id_material");
+    const colorSelect = document.getElementById("id_color");
+
+    materialSelect.addEventListener("change", function () {
+        const materialId = this.value;
+
+        colorSelect.innerHTML = "";
+
+        fetch(`/ajax/colors/?material_id=${materialId}`)
+            .then(response => response.json())
+            .then(data => {
+                data.colors.forEach(color => {
+                    const option = document.createElement("option");
+                    option.value = color.id;
+                    option.textContent = color.name;
+                    colorSelect.appendChild(option);
+                });
+            });
+    });
+
+    const sizeInput = document.getElementById("id_size");
+
+    if (sizeInput) {
+        sizeInput.setAttribute(
+            "min",
+            "{{ item.model.min_size }}"
+        );
+
+        sizeInput.setAttribute(
+            "max",
+            "{{ item.model.max_size }}"
+        );
+    }
+</script>
 {% endblock %}

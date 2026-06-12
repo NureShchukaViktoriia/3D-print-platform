@@ -21,4 +21,6 @@ urlpatterns = [
     path('cart/item/<int:item_id>/edit/', views.cart_item_edit, name='cart_item_edit'),
     path('cart/item/<int:item_id>/delete/', views.cart_item_delete, name='cart_item_delete'),
     path('cart/order/', views.order_create_from_cart, name='order_create_from_cart'),
+    path('ajax/colors/', views.get_colors_by_material, name='get_colors_by_material'),
+    path('ajax/calculate-cart-price/', views.calculate_cart_price, name='calculate_cart_price'),
 ]

@@ -4,10 +4,11 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from .forms import RegisterForm
 from .utils import calculate_print_price
-from .models import Model3D, Order, OrderItem, Cart, CartItem, Category, Material, Favorite
+from .models import Model3D, Order, OrderItem, Cart, CartItem, Category, Material, Favorite, Color, PrintQuality
 from .forms import OrderForm, CartItemForm
 from django.contrib import messages
 from .forms import UserProfileForm
+from django.http import JsonResponse
 
 def register_view(request):
     if request.method == 'POST':
@@ -24,7 +25,11 @@ def register_view(request):
 
 
 def home(request):
-    return render(request, 'main/home.html')
+    featured_models = Model3D.objects.all()[:6]
+
+    return render(request, 'main/home.html', {
+        'featured_models': featured_models,
+    })
 
 
 def catalog(request):
@@ -231,7 +236,7 @@ def cart_add(request, model_id):
     cart, created = Cart.objects.get_or_create(user=request.user)
 
     if request.method == 'POST':
-        form = CartItemForm(request.POST)
+        form = CartItemForm(request.POST, initial={'model': model})
 
         if form.is_valid():
             item = form.save(commit=False)
@@ -278,7 +283,7 @@ def cart_item_edit(request, item_id):
 
     return render(request, 'main/cart_item_edit.html', {
         'form': form,
-        'item': item
+        'item': item,
     })
 
 
@@ -352,3 +357,58 @@ def order_create_from_cart(request):
         'items': items,
         'total_price': cart.get_total_price()
     })
+
+@login_required
+def get_colors_by_material(request):
+    material_id = request.GET.get('material_id')
+
+    colors = Color.objects.filter(materials__id=material_id).distinct()
+
+    data = [
+        {
+            'id': color.id,
+            'name': color.name
+        }
+        for color in colors
+    ]
+
+    return JsonResponse({'colors': data})
+
+@login_required
+def calculate_cart_price(request):
+    model_id = request.GET.get('model_id')
+    material_id = request.GET.get('material_id')
+    quality_id = request.GET.get('quality_id')
+    size = request.GET.get('size')
+    wall_thickness = request.GET.get('wall_thickness')
+    infill = request.GET.get('infill')
+    quantity = request.GET.get('quantity')
+
+    try:
+        model = Model3D.objects.get(id=model_id)
+        material = Material.objects.get(id=material_id)
+        quality = PrintQuality.objects.get(id=quality_id)
+
+        result = calculate_print_price(
+            base_weight=model.base_weight,
+            complexity=model.complexity,
+            supports_required=model.supports_required,
+            recommended_wall_thickness=model.recommended_wall_thickness,
+            size=int(size),
+            base_size=model.base_size,
+            infill=int(infill),
+            wall_thickness=int(wall_thickness),
+            material=material,
+            quality=quality,
+            quantity=int(quantity)
+        )
+
+        return JsonResponse({
+            'price': result['price'],
+            'weight': result['weight']
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e)
+        }, status=400)
